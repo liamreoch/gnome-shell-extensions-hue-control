@@ -1,0 +1,10 @@
+Extension requires schema for values
+
+To get the compiled schema:
+glib-compile-schemas schemas/
+
+To enable the plugin for development, move the directory to:
+~/.local/share/gnome-shell/extensions/
+
+then run:
+gnome-extensions enable philipshue@reoch.net
