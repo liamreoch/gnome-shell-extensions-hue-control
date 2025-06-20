@@ -1,5 +1,6 @@
 import Soup from 'gi://Soup';
 import GLib from 'gi://GLib';
+import {SettingsKey as settingsKey} from './settingsKeys.js';
 
 export function checkDefaultRoomStatus(bridgeIP, username, groupId) {
     return new Promise((resolve, reject) => {
@@ -36,16 +37,19 @@ export function checkDefaultRoomStatus(bridgeIP, username, groupId) {
     });
 }
 
-export async function toggleLights(bridgeIP, username, groupId) {
+export async function toggleLights(settings) {
     log(`toggleLights called`);
 
     try {
+        const bridgeIP = settings.get_string(settingsKey.HUB_NETWORK_ADDRESS);
+        const username = settings.get_string(settingsKey.HUE_USERNAME);
+        const groupId = settings.get_int(settingsKey.DEFAULT_ROOM_ID);
+
+
         const isCurrentlyOn = await checkDefaultRoomStatus(bridgeIP, username, groupId);
         const turnOn = !isCurrentlyOn;
 
-        // const bridgeIP = settings.get_string(settingsKey.HUB_NETWORK_ADDRESS);
-        // const username = settings.get_string(settingsKey.HUE_USERNAME);
-        // const groupId = settings.get_string(settingsKey.DEFAULT_ROOM_ID);
+
 
         const url = `http://${bridgeIP}/api/${username}/groups/${groupId}/action`;
         const body = JSON.stringify({ on: turnOn });

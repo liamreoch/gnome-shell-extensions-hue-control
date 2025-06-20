@@ -9,7 +9,7 @@ import { QuickMenuToggle, SystemIndicator } from 'resource:///org/gnome/shell/ui
 import * as QuickSettings from 'resource:///org/gnome/shell/ui/quickSettings.js';
 
 import { toggleLights } from './utils/toggleDefaultRoom.js';
-import {SettingsKey as settingsKey, SettingsKey} from './utils/settingsKeys.js';
+import {SettingsKey as settingsKey} from './utils/settingsKeys.js';
 
 // import Main from 'resource:///org/gnome/shell/ui/main.js';
 
@@ -55,7 +55,7 @@ const HueToggle = GObject.registerClass({
 
             const bridgeIP = this._settings.get_string(settingsKey.HUB_NETWORK_ADDRESS);
             const username = this._settings.get_string(settingsKey.HUE_USERNAME);
-            const groupId = this._settings.get_string(settingsKey.DEFAULT_ROOM_ID);
+            const groupId = this._settings.get_int(settingsKey.DEFAULT_ROOM_ID);
 
             log(`The default groupID is ${groupId}`);
             //
@@ -68,10 +68,10 @@ const HueToggle = GObject.registerClass({
             // dialog.set_default_response("cancel");
             // dialog.present(this.get_root());
 
-            Main.notify("Hue Extension", `The default groupID is ${groupId}`);
+            log(`Current groupID is ${groupId}, Current username is ${username},  Current bridgeIP is ${bridgeIP}`);
 
 
-            toggleLights(bridgeIP, username, groupId);
+            toggleLights(this._settings);
         });
 
 
