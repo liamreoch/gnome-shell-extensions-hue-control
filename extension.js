@@ -9,7 +9,11 @@ import { QuickMenuToggle, SystemIndicator } from 'resource:///org/gnome/shell/ui
 import * as QuickSettings from 'resource:///org/gnome/shell/ui/quickSettings.js';
 
 import { toggleLights } from './utils/toggleDefaultRoom.js';
+import {SettingsKey as settingsKey, SettingsKey} from './utils/settingsKeys.js';
 
+// import Main from 'resource:///org/gnome/shell/ui/main.js';
+
+import Adw from "gi://Adw";
 
 
 const HueToggle = GObject.registerClass({
@@ -24,6 +28,8 @@ const HueToggle = GObject.registerClass({
             iconName: 'lightbulb-symbolic',
             toggleMode: true,
         });
+
+        this._settings = Me._settings;
 
         // Add a simple non-reactive menu item as a placeholder
         const placeholderItem = new PopupMenuItem(_('Lights will go here'), {
@@ -45,7 +51,27 @@ const HueToggle = GObject.registerClass({
             // TODO: Check if lights are on already and toggle switch if so
             // call to bridge, if on, this.checked = true, else false
 
-            toggleLights();
+            // const settings = this.getSettings();
+
+            const bridgeIP = this._settings.get_string(settingsKey.HUB_NETWORK_ADDRESS);
+            const username = this._settings.get_string(settingsKey.HUE_USERNAME);
+            const groupId = this._settings.get_string(settingsKey.DEFAULT_ROOM_ID);
+
+            log(`The default groupID is ${groupId}`);
+            //
+            // const dialog = new Adw.AlertDialog({
+            //     heading: "Hub Connection",
+            //     body: `The default groupID is ${groupId}`
+            // });
+            //
+            // dialog.add_response("cancel","Cancel");
+            // dialog.set_default_response("cancel");
+            // dialog.present(this.get_root());
+
+            Main.notify("Hue Extension", `The default groupID is ${groupId}`);
+
+
+            toggleLights(bridgeIP, username, groupId);
         });
 
 
@@ -72,6 +98,7 @@ class HueIndicator extends QuickSettings.SystemIndicator {
 
 export default class HueExtension extends Extension {
     enable() {
+        this._settings = this.getSettings();
         this._indicator = new HueIndicator(this);
         Main.panel.statusArea.quickSettings.addExternalIndicator(this._indicator);
     }
