@@ -35,12 +35,14 @@ const HueToggle = GObject.registerClass({
         settingsItem.visible = Main.sessionMode.allowSettings;
         this.menu._settingsActions[Me.uuid] = settingsItem;
 
+
+    }
+
+    activate() {
         // Toggle checked state when clicked
-        this.connect('clicked', () => {
-            this.checked = !this.checked;
-            log(`Hue toggle is now ${this.checked ? 'ON' : 'OFF'}`);
-            // TODO: Add actual light control logic here
-        });
+        this.checked = !this.checked;
+        log(`Hue toggle is now ${this.checked ? 'ON' : 'OFF'}`);
+        // TODO: Add actual light control logic here
     }
 });
 
@@ -50,13 +52,13 @@ class HueIndicator extends QuickSettings.SystemIndicator {
     _init(Me) {
         super._init();
 
-        this._indicator = this._addIndicator();
-        this._indicator.iconName = 'lightbulb-symbolic';
+        // this._indicator = this._addIndicator();
+        // this._indicator.iconName = 'lightbulb-symbolic';
 
         const toggle = new HueToggle(Me);
-        toggle.bind_property('checked',
-            this._indicator, 'visible',
-            GObject.BindingFlags.SYNC_CREATE);
+        // toggle.bind_property('checked',
+        //     this._indicator, 'visible',
+        //     GObject.BindingFlags.SYNC_CREATE);
 
         this.quickSettingsItems.push(toggle);
     }
