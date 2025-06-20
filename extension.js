@@ -8,6 +8,9 @@ import { QuickMenuToggle, SystemIndicator } from 'resource:///org/gnome/shell/ui
 
 import * as QuickSettings from 'resource:///org/gnome/shell/ui/quickSettings.js';
 
+import { toggleLights } from './utils/toggleDefaultRoom.js';
+
+
 
 const HueToggle = GObject.registerClass({
     Signals: {
@@ -35,14 +38,17 @@ const HueToggle = GObject.registerClass({
         settingsItem.visible = Main.sessionMode.allowSettings;
         this.menu._settingsActions[Me.uuid] = settingsItem;
 
+        this.connect('clicked', () => {
+            log(`Hue toggle is now ${this.checked ? 'ON' : 'OFF'}`);
+            // TODO: Add actual light control logic here
 
-    }
+            // TODO: Check if lights are on already and toggle switch if so
+            // call to bridge, if on, this.checked = true, else false
 
-    activate() {
-        // Toggle checked state when clicked
-        this.checked = !this.checked;
-        log(`Hue toggle is now ${this.checked ? 'ON' : 'OFF'}`);
-        // TODO: Add actual light control logic here
+            toggleLights();
+        });
+
+
     }
 });
 
