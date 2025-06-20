@@ -1,20 +1,16 @@
 import GObject from 'gi://GObject';
-import { PopupMenuItem } from 'resource:///org/gnome/shell/ui/popupMenu.js';
-
+import {PopupMenuItem} from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-
-import { Extension, gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
-import { QuickMenuToggle, SystemIndicator } from 'resource:///org/gnome/shell/ui/quickSettings.js';
-
 import * as QuickSettings from 'resource:///org/gnome/shell/ui/quickSettings.js';
 
 import { toggleLights } from './utils/toggleDefaultRoom.js';
-import {SettingsKey as settingsKey} from './utils/settingsKeys.js';
+import { SettingsKey } from './utils/settingsKeys.js';
 
-// import Main from 'resource:///org/gnome/shell/ui/main.js';
-
-import Adw from "gi://Adw";
-
+// Icons
+const ActionsPath = '/icons/hicolor/scalable/actions/';
+const DisabledIcon = 'light-bulb';
 
 const HueToggle = GObject.registerClass({
     Signals: {
@@ -31,50 +27,43 @@ const HueToggle = GObject.registerClass({
 
         this._settings = Me._settings;
 
+        // Set up entry
+        // TODO make first null value the image
+        this.menu.setHeader(null, _('Hue Lights'), null);
+
+        // Get name of current default room
+        const defaultRoomName = this._settings.get_string(SettingsKey.DEFAULT_ROOM_NAME);
+
         // Add a simple non-reactive menu item as a placeholder
-        const placeholderItem = new PopupMenuItem(_('Lights will go here'), {
+        const currentRoom = new PopupMenuItem(_(`${defaultRoomName}`), {
             reactive: false,
             can_focus: false,
         });
-        this.menu.addMenuItem(placeholderItem);
 
-        const settingsItem = this.menu.addAction(_('Settings'), () => Me._openPreferences());
+        this.menu.addMenuItem(currentRoom);
+
+        // Separator
+        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+
+        // Settings
+        const settingsItem = this.menu.addAction(_('Settings'), () => {
+            Me._openPreferences()
+        });
+
+        this.menu.connect('open-state-changed', (menu, isOpen) => {
+            if (isOpen) {
+                currentRoom.label.text = this._settings.get_string(SettingsKey.DEFAULT_ROOM_NAME);
+                log("Menu is opened");
+            }
+        });
 
         // Ensure the settings are unavailable when the screen is locked
         settingsItem.visible = Main.sessionMode.allowSettings;
         this.menu._settingsActions[Me.uuid] = settingsItem;
 
         this.connect('clicked', () => {
-            log(`Hue toggle is now ${this.checked ? 'ON' : 'OFF'}`);
-            // TODO: Add actual light control logic here
-
-            // TODO: Check if lights are on already and toggle switch if so
-            // call to bridge, if on, this.checked = true, else false
-
-            // const settings = this.getSettings();
-
-            const bridgeIP = this._settings.get_string(settingsKey.HUB_NETWORK_ADDRESS);
-            const username = this._settings.get_string(settingsKey.HUE_USERNAME);
-            const groupId = this._settings.get_int(settingsKey.DEFAULT_ROOM_ID);
-
-            log(`The default groupID is ${groupId}`);
-            //
-            // const dialog = new Adw.AlertDialog({
-            //     heading: "Hub Connection",
-            //     body: `The default groupID is ${groupId}`
-            // });
-            //
-            // dialog.add_response("cancel","Cancel");
-            // dialog.set_default_response("cancel");
-            // dialog.present(this.get_root());
-
-            log(`Current groupID is ${groupId}, Current username is ${username},  Current bridgeIP is ${bridgeIP}`);
-
-
             toggleLights(this._settings);
         });
-
-
     }
 });
 
@@ -83,15 +72,7 @@ const HueIndicator = GObject.registerClass(
 class HueIndicator extends QuickSettings.SystemIndicator {
     _init(Me) {
         super._init();
-
-        // this._indicator = this._addIndicator();
-        // this._indicator.iconName = 'lightbulb-symbolic';
-
         const toggle = new HueToggle(Me);
-        // toggle.bind_property('checked',
-        //     this._indicator, 'visible',
-        //     GObject.BindingFlags.SYNC_CREATE);
-
         this.quickSettingsItems.push(toggle);
     }
 });

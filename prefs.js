@@ -4,18 +4,9 @@ import Gtk from "gi://Gtk";
 import Gdk from "gi://Gdk";
 
 import * as GeneralPrefs from "./preferences/generalPage.js";
-// import {SettingsKeys as SettingsKey} from './utils/settingsKeys.js';
-import {SettingsKey} from './utils/settingsKeys.js';
+import { SettingsKey } from './utils/settingsKeys.js';
 
 import { ExtensionPreferences } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
-
-// const SettingsKey = {
-//   DEFAULT_WIDTH: "prefs-default-width",
-//   DEFAULT_HEIGHT: "prefs-default-height",
-//   DEFAULT_ROOM_ID: "default-room-id",
-//   HUB_NETWORK_ADDRESS: "hub-network-address",
-//   HUE_USERNAME: "hue-username"
-// };
 
 export default class PhilipsHuePrefs extends ExtensionPreferences {
   fillPreferencesWindow(window) {
@@ -37,6 +28,7 @@ export default class PhilipsHuePrefs extends ExtensionPreferences {
     window.connect("close-request", () => {
       let currentWidth = window.default_width;
       let currentHeight = window.default_height;
+
       // Remember user window size adjustments.
       if (currentWidth !== prefsWidth || currentHeight !== prefsHeight) {
         settings.set_int(SettingsKey.DEFAULT_WIDTH, currentWidth);

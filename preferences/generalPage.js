@@ -4,26 +4,9 @@
 import Adw from "gi://Adw";
 import Gtk from "gi://Gtk";
 import GObject from "gi://GObject";
-import Gdk from "gi://Gdk";
-import Gio from "gi://Gio";
 import Soup from 'gi://Soup';
 import GLib from 'gi://GLib';
-
-// TODO: Maybe move this elsewhere
-const session = new Soup.Session();
-// let sessionSync = new Soup.SessionSync();
-
-
 import {gettext as _} from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
-
-const genParam = (type, name, ...dflt) =>
-    GObject.ParamSpec[type](
-        name,
-        name,
-        name,
-        GObject.ParamFlags.READWRITE,
-        ...dflt,
-    );
 
 export var GeneralPage = GObject.registerClass(
     class HueGeneralPage extends Adw.PreferencesPage {
@@ -39,20 +22,10 @@ export var GeneralPage = GObject.registerClass(
             // If there's no current Hub IP address in the schema key, get it
             const hubIPAddr = this._settings.get_string(this._settingsKey.HUB_NETWORK_ADDRESS);
 
-            log(`Hub address in schema: ${hubIPAddr}`);
-
-            if (hubIPAddr == '') {
+            if (hubIPAddr === '') {
                 this._fetchBridgeInfo();
             }
 
-
-            // TEMP GET username
-            const hue_username = this._settings.get_string(this._settingsKey.HUE_USERNAME);
-
-            log(`hue username: ${hue_username}`);
-
-            // Hub Connection group
-            // --------------
             let hubConnectionGroup = new Adw.PreferencesGroup({
                 title: _("Hub Connection"),
             });
@@ -65,17 +38,13 @@ export var GeneralPage = GObject.registerClass(
                 })
             });
 
-
-            // Bind signals
+            // Bind signal
             connectButton.connect('clicked', this._onConnectToHub.bind(this));
 
             // Add button to hubConnectionGroup
             hubConnectionGroup.add(connectButton);
 
             this.add(hubConnectionGroup);
-
-
-            let rooms = [];
 
             // Default room Group
             let defaultRoomGroup = new Adw.PreferencesGroup({
@@ -85,14 +54,8 @@ export var GeneralPage = GObject.registerClass(
             // StringList for room names
             let roomStore = new Gtk.StringList();
 
+            // List to track actual ids
             const roomIds = [];
-
-
-
-            // const roomStore2 = new Gtk.ListStore();
-            // roomStore2.set_column_types([GObject.TYPE_STRING, GObject.TYPE_INT]);
-
-
 
             // Rooms group
             // --------------
@@ -101,63 +64,42 @@ export var GeneralPage = GObject.registerClass(
             });
 
             this._getHueRooms(rooms => {
-                if (rooms.length != 0) {
+                if (rooms.length !== 0) {
                     // This happens after it returns, so we can nest the dependent code here
 
                     // Populate roomStore
                     for (const room of rooms) {
                       roomStore.append(_(room.name));
                       roomIds.push(parseInt(room.id));
-                      log("Adding room with id " + room.id);
                     }
-
-
-                    // Temporary dummy value for defaultRoomId
-                    // let defaultRoomId = 3
-
-                    // Find current default room index
-                    // const currentIndex = rooms.findIndex((r) => r.id === defaultRoomId);
-                    // const defaultIndex = currentIndex >= 0 ? currentIndex : 0;
 
                     const defaultRoom = this._settings.get_int(this._settingsKey.DEFAULT_ROOM_ID);
 
-                    log(`(inside gen page) Default room: ${defaultRoom}`);
-
-                    log(`(inside gen page) roomIds: ${roomIds}`);
-
                     // Get index of default room id from roomIds
                     const selectedDefault = roomIds.indexOf(defaultRoom);
-
-                    log(`Current selected default (on load) ${selectedDefault}`);
 
                     // ComboRow for room affected by switch
                     let defaultRoomRow = new Adw.ComboRow({
                         title: _('Default Room'),
                         subtitle: _('The room that responds to the menu light toggle'),
                         model: roomStore,
-                        // selected: this._settings.get_int(this._settingsKey.DEFAULT_ROOM_ID),
                         selected: selectedDefault,
-                        // factory: factory,
                     });
 
                     // Handle change
                     defaultRoomRow.connect("notify::selected", () => {
                         const index = defaultRoomRow.selected;
+                        const selectedRoomName = rooms[index].name;
+                        const selectedRoomId = roomIds[index];
 
-                        const defaultId = roomIds[index];
-
-                        const selectedRoom = rooms[index];
-                        // settings.set_string("default-room-id", defaultId);
-                        this._settings.set_int(this._settingsKey.DEFAULT_ROOM_ID, defaultId);
-                        console.log(`Default room set to ${selectedRoom.name} with id ${defaultId}`);
+                        this._settings.set_int(this._settingsKey.DEFAULT_ROOM_ID, selectedRoomId);
+                        this._settings.set_string(this._settingsKey.DEFAULT_ROOM_NAME, selectedRoomName);
                     });
-
 
                     defaultRoomGroup.add(defaultRoomRow);
 
                     // Add selection row to main windows
                     this.add(defaultRoomGroup);
-
 
                     for (const room of rooms) {
                         const row = new Adw.SwitchRow({
@@ -169,11 +111,8 @@ export var GeneralPage = GObject.registerClass(
 
                         row.connect('notify::active', (sw) => {
                             if (sw.active) {
-                                log(`Activated room: ${sw.title} (ID: ${row.id})`);
                                 this._toggleRoomLight(row.id, true);
-
                             } else {
-                                log(`Deactivated room: ${sw.title} (ID: ${row.id})`);
                                 this._toggleRoomLight(row.id, false);
                             }
                         });
@@ -182,31 +121,11 @@ export var GeneralPage = GObject.registerClass(
                     }
 
                     this.add(roomsGroup);
-
-
                 }
             }, error => {
                 log(`Could not get rooms: ${error.message}`);
             });
-
         }
-
-        _getSelectedRoomIndex(model, storedId) {
-            const [valid, iter] = model.get_iter_first();
-            let index = 0;
-
-            while (valid) {
-                const [ok, id] = model.get(iter, 1); // column 1 is the ID
-                if (ok && id === storedId) {
-                    return index;
-                }
-                if (!model.iter_next(iter)) break;
-                index++;
-            }
-
-            return 0; // fallback to first entry
-        }
-
 
         _fetchBridgeInfo() {
             const url = "https://discovery.meethue.com/";
@@ -225,9 +144,6 @@ export var GeneralPage = GObject.registerClass(
                         const bytes = stream.get_data();
                         const text = new TextDecoder().decode(bytes);
 
-                        log(`Status Code: ${message.get_status()}`);
-                        log(`Body:\n${text}`);
-
                         if (message.get_status() !== Soup.Status.OK) {
                             throw new Error(`Request failed with status ${message.get_status()}`);
                         }
@@ -240,8 +156,6 @@ export var GeneralPage = GObject.registerClass(
 
                         let hubInfo = data[0];
 
-                        log('Setting Schema key');
-
                         // Update key value in schema
                         this._settings.set_string(this._settingsKey.HUB_NETWORK_ADDRESS, hubInfo.internalipaddress);
 
@@ -251,7 +165,6 @@ export var GeneralPage = GObject.registerClass(
                 }
             );
         }
-
 
         _getHueRooms(callback, errorCallback = null) {
             const Soup = imports.gi.Soup;
@@ -306,7 +219,6 @@ export var GeneralPage = GObject.registerClass(
             );
         }
 
-
         _registerWithBridge(successCallback, errorCallback = null) {
             const Soup = imports.gi.Soup;
             const GLib = imports.gi.GLib;
@@ -319,7 +231,7 @@ export var GeneralPage = GObject.registerClass(
 
             let attemptCount = 0;
             const maxAttempts = 15;
-            const retryInterval = 2; // seconds
+            const retryInterval = 2; // Seconds
 
             const tryRegister = () => {
                 const message = Soup.Message.new("POST", url);
@@ -334,9 +246,6 @@ export var GeneralPage = GObject.registerClass(
                             const stream = session.send_and_read_finish(result);
                             const responseBytes = stream.get_data();
                             const text = new TextDecoder().decode(responseBytes);
-
-                            log(`Status Code: ${message.get_status()}`);
-                            log(`Bridge Response:\n${text}`);
 
                             if (message.get_status() !== Soup.Status.OK) {
                                 throw new Error(`POST failed with status ${message.get_status()}`);
@@ -356,8 +265,6 @@ export var GeneralPage = GObject.registerClass(
                                 if (successCallback) {
                                     successCallback(username);
                                 }
-
-
                                 return GLib.SOURCE_REMOVE; // Stop retrying
                             } else if (data[0]?.error?.type === 101) {
                                 // Link button not pressed yet, keep retrying
@@ -388,8 +295,9 @@ export var GeneralPage = GObject.registerClass(
                                 const error = new Error('Bridge registration timed out.');
                                 logError(error, 'Hue bridge registration timeout');
 
-                                if (errorCallback)
+                                if (errorCallback) {
                                     errorCallback(error);
+                                }
                             }
 
                         } catch (e) {
@@ -402,14 +310,11 @@ export var GeneralPage = GObject.registerClass(
                     }
                 );
             };
-
-            tryRegister(); // Start first attempt
+            // Start first attempt
+            tryRegister();
         }
 
         _toggleRoomLight(groupId, turnOn) {
-            // const Soup = imports.gi.Soup;
-            // const GLib = imports.gi.GLib;
-
             const session = Soup.Session.new();
 
             const bridgeIP = this._settings.get_string(this._settingsKey.HUB_NETWORK_ADDRESS);
@@ -452,19 +357,12 @@ export var GeneralPage = GObject.registerClass(
             );
         }
 
-
-        _resetShortcut() {
-            this.shortcutKeyBoard.resetAccelerator();
-        }
-
         _onConnectToHub() {
-
-            // Here we should send a request to identify the Hub IP
 
             log("Connect button clicked");
             const hubIPAddr = this._settings.get_string(this._settingsKey.HUB_NETWORK_ADDRESS);
 
-            if (hubIPAddr != '') {
+            if (hubIPAddr !== '') {
                 const dialog = new Adw.AlertDialog({
                     heading: "Hub Connection",
                     body: `Press the button on the Hub (${hubIPAddr})`
@@ -477,7 +375,6 @@ export var GeneralPage = GObject.registerClass(
 
                 dialog.connect("response", (dlg, response) => {
                     if (response === "connect") {
-                        log("Connecting to hub...");
                         // Perform connect logic here
                         this._registerWithBridge(
                             username => {

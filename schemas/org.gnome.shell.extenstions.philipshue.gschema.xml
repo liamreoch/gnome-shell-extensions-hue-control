@@ -1,37 +1,42 @@
 <schemalist>
-  <schema id="org.gnome.shell.extensions.philipshue" path="/org/gnome/shell/extensions/philipshue/">
-    <key name="default-brightness" type="i">
-      <default>100</default>
-      <summary>Default brightness level</summary>
-      <description>The brightness level used when turning on lights.</description>
-    </key>
-    <key type="i" name="prefs-default-width">
-      <default>570</default>
-      <summary>Default width for the preferences window</summary>
-    </key>
-    <key type="i" name="prefs-default-height">
-      <default>590</default>
-      <summary>Default height for the preferences window</summary>
-    </key>
-    <key name="auto-turn-on" type="b">
-        <default>false</default>
-        <summary>Turn on lights at startup</summary>
-        <description>If true, lights will automatically turn on when the extension is enabled.</description>
-    </key>
-    <key name="hub-network-address" type="s">
-        <default>''</default>
-        <summary>Hub network address</summary>
-        <description>IP address of Philips Hue Hub.</description>
-    </key>
-    <key name="hue-username" type="s">
-        <default>''</default>
-        <summary>Hue username</summary>
-        <description>Hue username.</description>
-    </key>
-    <key name="default-room-id" type="i">
-        <default>0</default>
-        <summary>Default room ID</summary>
-        <description>The room to toggle from the extension menu.</description>
-    </key>
-  </schema>
+    <schema id="org.gnome.shell.extensions.philipshue" path="/org/gnome/shell/extensions/philipshue/">
+        <key name="default-brightness" type="i">
+            <default>100</default>
+            <summary>Default brightness level</summary>
+            <description>The brightness level used when turning on lights.</description>
+        </key>
+        <key type="i" name="prefs-default-width">
+            <default>570</default>
+            <summary>Default width for the preferences window</summary>
+        </key>
+        <key type="i" name="prefs-default-height">
+            <default>590</default>
+            <summary>Default height for the preferences window</summary>
+        </key>
+        <key name="auto-turn-on" type="b">
+            <default>false</default>
+            <summary>Turn on lights at startup</summary>
+            <description>If true, lights will automatically turn on when the extension is enabled.</description>
+        </key>
+        <key name="hub-network-address" type="s">
+            <default>''</default>
+            <summary>Hub network address</summary>
+            <description>IP address of Philips Hue Hub.</description>
+        </key>
+        <key name="hue-username" type="s">
+            <default>''</default>
+            <summary>Hue username</summary>
+            <description>Hue username.</description>
+        </key>
+        <key name="default-room-id" type="i">
+            <default>0</default>
+            <summary>Default room ID</summary>
+            <description>The room to toggle from the extension menu.</description>
+        </key>
+        <key name="default-room-name" type="s">
+            <default>''</default>
+            <summary>Default room name</summary>
+            <description>The room to toggle from the extension menu.</description>
+        </key>
+    </schema>
 </schemalist>
