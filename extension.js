@@ -1,12 +1,12 @@
 import GObject from 'gi://GObject';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import {PopupMenuItem} from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
-import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as QuickSettings from 'resource:///org/gnome/shell/ui/quickSettings.js';
 
-import { toggleLights } from './utils/toggleDefaultRoom.js';
-import { SettingsKey } from './utils/settingsKeys.js';
+import {defaultLightIsOn, toggleLights} from './utils/toggleDefaultRoom.js';
+import {SettingsKey} from './utils/settingsKeys.js';
 
 // Icons
 const ActionsPath = '/icons/hicolor/scalable/actions/';
@@ -53,7 +53,6 @@ const HueToggle = GObject.registerClass({
         this.menu.connect('open-state-changed', (menu, isOpen) => {
             if (isOpen) {
                 currentRoom.label.text = this._settings.get_string(SettingsKey.DEFAULT_ROOM_NAME);
-                log("Menu is opened");
             }
         });
 
@@ -82,6 +81,21 @@ export default class HueExtension extends Extension {
         this._settings = this.getSettings();
         this._indicator = new HueIndicator(this);
         Main.panel.statusArea.quickSettings.addExternalIndicator(this._indicator);
+
+        // On menu open, turn toggle on
+        // TODO: limit this to be only if we're in the home network with the bridge
+        Main.panel.statusArea.quickSettings.menu.connect('open-state-changed', (menu, isOpen) => {
+            if (isOpen) {
+                (async () => {
+                    try {
+                        this._indicator.quickSettingsItems[0].checked = await defaultLightIsOn(this._settings);
+                    } catch (e) {
+                        logError(e, 'Failed to check default light status');
+                    }
+                })();
+            }
+        });
+
     }
 
     disable() {

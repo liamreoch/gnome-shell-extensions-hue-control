@@ -3,5 +3,5 @@
   "description": "Control Philips Hue lights on local network",
   "uuid": "philipshue@reoch.net",
   "settings-schema": "org.gnome.shell.extensions.philipshue",
-  "shell-version": ["48.2"]
+  "shell-version": ["48"]
 }
