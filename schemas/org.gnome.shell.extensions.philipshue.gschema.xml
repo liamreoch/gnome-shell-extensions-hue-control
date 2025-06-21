@@ -38,5 +38,10 @@
             <summary>Default room name</summary>
             <description>The room to toggle from the extension menu.</description>
         </key>
+        <key name="home-network-ssid" type="s">
+            <default>''</default>
+            <summary>SSID of the home network</summary>
+            <description>Checked to ensure that we're on the network with the bridge.</description>
+        </key>
     </schema>
 </schemalist>

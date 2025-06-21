@@ -1,7 +1,13 @@
 {
   "name": "Philips Hue Control",
-  "description": "Control Philips Hue lights on local network",
+  "description": "Control Philips Hue groups on local network",
   "uuid": "philipshue@reoch.net",
+  "donations": {
+    "paypal": [
+      "liamreoch"
+    ]
+  },
   "settings-schema": "org.gnome.shell.extensions.philipshue",
-  "shell-version": ["48"]
+  "shell-version": ["48"],
+  "url": "https://github.com/liamreoch/gnome-shell-extensions-philips-hue"
 }

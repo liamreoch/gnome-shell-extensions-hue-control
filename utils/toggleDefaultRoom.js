@@ -43,7 +43,6 @@ export async function toggleLights(settings) {
         const username = settings.get_string(settingsKey.HUE_USERNAME);
         const groupId = settings.get_int(settingsKey.DEFAULT_ROOM_ID);
 
-
         const isCurrentlyOn = await defaultLightIsOn(settings);
         const turnOn = !isCurrentlyOn;
 
@@ -80,3 +79,4 @@ export async function toggleLights(settings) {
         logError(error, "toggleLights failed while checking room status");
     }
 }
+
