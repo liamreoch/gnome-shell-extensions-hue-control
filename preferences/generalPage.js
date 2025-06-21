@@ -7,6 +7,7 @@ import GObject from "gi://GObject";
 import Soup from 'gi://Soup';
 import GLib from 'gi://GLib';
 import {gettext as _} from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
+import {isBridgeAvailable} from "../utils/networkTools.js";
 
 export var GeneralPage = GObject.registerClass(
     class HueGeneralPage extends Adw.PreferencesPage {
@@ -19,66 +20,159 @@ export var GeneralPage = GObject.registerClass(
             this._settings = settings;
             this._settingsKey = settingsKey;
 
-            // If there's no current Hub IP address in the schema key, get it
-            const hubIPAddr = this._settings.get_string(this._settingsKey.HUB_NETWORK_ADDRESS);
+            const storedIP = this._settings.get_string(this._settingsKey.HUB_NETWORK_ADDRESS);
 
-            if (hubIPAddr === '') {
-                this._fetchBridgeInfo();
+            // Helper to handle discovery and pick a bridge IP or fail
+            const discoverBridge = () => {
+                return this._fetchBridgeInfoPromise()
+                    .then(bridges => {
+                        if (!bridges || bridges.length === 0) {
+                            return Promise.reject(new Error('No bridges found on the network'));
+                        }
+                        return bridges[0].internalipaddress;
+                    });
+            };
+
+            // Start with stored IP or discovery
+            const bridgeIPPromise = storedIP && storedIP !== ''
+                ? Promise.resolve(storedIP)
+                : discoverBridge();
+
+            bridgeIPPromise
+                .then((bridgeIP) => {
+                    // Save bridgeIP to settings if we discovered it
+                    if (bridgeIP !== storedIP) {
+                        this._settings.set_string(this._settingsKey.HUB_NETWORK_ADDRESS, bridgeIP);
+                    }
+
+                    // Check if the bridge is actually reachable
+                    return isBridgeAvailable(bridgeIP)
+                        .then((available) => {
+                            if (!available) {
+                                return Promise.reject(new Error('Bridge unavailable'));
+                            }
+                            // Build the connection UI early
+                            this._createHubConnectionUI();
+                            return bridgeIP;
+                        });
+                })
+                .then(() => {
+                    // Load rooms UI only if bridge is available
+                    return this._loadRoomsUI();
+                })
+                .catch((error) => {
+                    logError(error, 'Initialization failed or no bridge found');
+
+                    // Display error UI
+                    this._showBridgeUnavailableMessage();
+                });
+        }
+
+
+
+        // _fetchBridgeInfoPromise() {
+        //     return new Promise((resolve, reject) => {
+        //         this._fetchBridgeInfo((error, data) => {
+        //             if (error) {
+        //                 reject(error);
+        //             } else {
+        //                 resolve(data);
+        //             }
+        //         });
+        //     });
+        // }
+
+        _fetchBridgeInfoPromise() {
+            const url = "https://discovery.meethue.com/";
+            const session = new Soup.Session();
+            const message = Soup.Message.new('GET', url);
+
+            return new Promise((resolve, reject) => {
+                session.send_and_read_async(message, 0, null, (source, result) => {
+                    try {
+                        const stream = session.send_and_read_finish(result);
+                        const bytes = stream.get_data();
+                        const text = new TextDecoder().decode(bytes);
+
+                        if (message.get_status() !== Soup.Status.OK) {
+                            reject(new Error(`Request failed with status ${message.get_status()}`));
+                            return;
+                        }
+
+                        let data = JSON.parse(text);
+
+                        if (!Array.isArray(data) || data.length === 0 || typeof data[0] !== 'object') {
+                            // No Hue Bridge found on this network
+                            resolve([]); // resolve empty array — no error, just no bridges
+                            return;
+                        }
+
+                        resolve(data); // resolve the full array of bridges
+
+                    } catch (error) {
+                        reject(error);
+                    }
+                });
+            });
+        }
+
+        _createHubConnectionUI() {
+            return new Promise(resolve => {
+                let hubConnectionGroup = new Adw.PreferencesGroup({
+                    title: _("Hub Connection"),
+                });
+
+                let connectButton = new Gtk.Button({
+                    child: new Adw.ButtonContent({
+                        icon_name: 'list-add-symbolic',
+                        label: _('Connect')
+                    })
+                });
+
+                connectButton.connect('clicked', this._onConnectToHub.bind(this));
+
+                hubConnectionGroup.add(connectButton);
+                this.add(hubConnectionGroup);
+
+                resolve();
+            });
+        }
+
+        // Promise returning function for _getHueRooms
+        _getHueRoomsPromise() {
+            return new Promise((resolve, reject) => {
+                this._getHueRooms(
+                    rooms => resolve(rooms),
+                    error => reject(error)
+                );
+            });
+        }
+
+        _loadRoomsUI() {
+            if (!this._keyValuesExist()) {
+                return Promise.resolve();
             }
 
-            let hubConnectionGroup = new Adw.PreferencesGroup({
-                title: _("Hub Connection"),
-            });
+            return this._getHueRoomsPromise()
+                .then(rooms => {
+                    if (rooms.length === 0) return;
 
-            // Create Connect button
-            let connectButton = new Gtk.Button({
-                child: new Adw.ButtonContent({
-                    icon_name: 'list-add-symbolic',
-                    label: _('Connect')
-                })
-            });
+                    // Default room Group
+                    let defaultRoomGroup = new Adw.PreferencesGroup({
+                        title: _("Default room"),
+                    });
 
-            // Bind signal
-            connectButton.connect('clicked', this._onConnectToHub.bind(this));
+                    let roomStore = new Gtk.StringList();
+                    const roomIds = [];
 
-            // Add button to hubConnectionGroup
-            hubConnectionGroup.add(connectButton);
-
-            this.add(hubConnectionGroup);
-
-            // Default room Group
-            let defaultRoomGroup = new Adw.PreferencesGroup({
-                title: _("Default room"),
-            });
-
-            // StringList for room names
-            let roomStore = new Gtk.StringList();
-
-            // List to track actual ids
-            const roomIds = [];
-
-            // Rooms group
-            // --------------
-            let roomsGroup = new Adw.PreferencesGroup({
-                title: _("Rooms"),
-            });
-
-            this._getHueRooms(rooms => {
-                if (rooms.length !== 0) {
-                    // This happens after it returns, so we can nest the dependent code here
-
-                    // Populate roomStore
                     for (const room of rooms) {
-                      roomStore.append(_(room.name));
-                      roomIds.push(parseInt(room.id));
+                        roomStore.append(_(room.name));
+                        roomIds.push(parseInt(room.id));
                     }
 
                     const defaultRoom = this._settings.get_int(this._settingsKey.DEFAULT_ROOM_ID);
-
-                    // Get index of default room id from roomIds
                     const selectedDefault = roomIds.indexOf(defaultRoom);
 
-                    // ComboRow for room affected by switch
                     let defaultRoomRow = new Adw.ComboRow({
                         title: _('Default Room'),
                         subtitle: _('The room that responds to the menu light toggle'),
@@ -86,7 +180,6 @@ export var GeneralPage = GObject.registerClass(
                         selected: selectedDefault,
                     });
 
-                    // Handle change
                     defaultRoomRow.connect("notify::selected", () => {
                         const index = defaultRoomRow.selected;
                         const selectedRoomName = rooms[index].name;
@@ -97,9 +190,12 @@ export var GeneralPage = GObject.registerClass(
                     });
 
                     defaultRoomGroup.add(defaultRoomRow);
-
-                    // Add selection row to main windows
                     this.add(defaultRoomGroup);
+
+                    // Rooms group
+                    let roomsGroup = new Adw.PreferencesGroup({
+                        title: _("Rooms"),
+                    });
 
                     for (const room of rooms) {
                         const row = new Adw.SwitchRow({
@@ -110,65 +206,85 @@ export var GeneralPage = GObject.registerClass(
                         row.id = room.id;
 
                         row.connect('notify::active', (sw) => {
-                            if (sw.active) {
-                                this._toggleRoomLight(row.id, true);
-                            } else {
-                                this._toggleRoomLight(row.id, false);
-                            }
+                            this._toggleRoomLight(row.id, sw.active);
                         });
 
                         roomsGroup.add(row);
                     }
 
                     this.add(roomsGroup);
-                }
-            }, error => {
-                log(`Could not get rooms: ${error.message}`);
-            });
+                });
         }
 
-        _fetchBridgeInfo() {
-            const url = "https://discovery.meethue.com/";
+        _keyValuesExist() {
+            const defaultRoomId = this._settings.get_int(this._settingsKey.DEFAULT_ROOM_ID);
+            const defaultRoomName = this._settings.get_string(this._settingsKey.DEFAULT_ROOM_NAME);
+            const hueNetworkAddress = this._settings.get_string(this._settingsKey.HUB_NETWORK_ADDRESS);
+            const hueUsername = this._settings.get_string(this._settingsKey.HUE_USERNAME);
 
-            const session = new Soup.Session();
-            const message = Soup.Message.new('GET', url);
+            return (hueNetworkAddress !== '' && hueUsername !== '');
+        }
 
-            session.send_and_read_async(
-                message,
-                // GLib.PRIORITY_DEFAULT,
-                0,
-                null,
-                (source, result) => {
-                    try {
-                        const stream = session.send_and_read_finish(result);
-                        const bytes = stream.get_data();
-                        const text = new TextDecoder().decode(bytes);
+        // _fetchBridgeInfo() {
+        //     const url = "https://discovery.meethue.com/";
+        //
+        //     const session = new Soup.Session();
+        //     const message = Soup.Message.new('GET', url);
+        //
+        //     session.send_and_read_async(
+        //         message,
+        //         // GLib.PRIORITY_DEFAULT,
+        //         0,
+        //         null,
+        //         (source, result) => {
+        //             try {
+        //                 const stream = session.send_and_read_finish(result);
+        //                 const bytes = stream.get_data();
+        //                 const text = new TextDecoder().decode(bytes);
+        //
+        //                 if (message.get_status() !== Soup.Status.OK) {
+        //                     throw new Error(`Request failed with status ${message.get_status()}`);
+        //                 }
+        //
+        //                 let data = JSON.parse(text);
+        //
+        //                 if (!Array.isArray(data) || data.length === 0 || typeof data[0] !== 'object') {
+        //                     // No Hue Bridge found on this network
+        //                     throw new Error('Expected a non-empty array of JSON objects');
+        //                 }
+        //
+        //                 let hubInfo = data[0];
+        //
+        //                 // Update key value in schema
+        //                 this._settings.set_string(this._settingsKey.HUB_NETWORK_ADDRESS, hubInfo.internalipaddress);
+        //
+        //             } catch (error) {
+        //                 logError(error, "Failed to fetch bridge info");
+        //             }
+        //         }
+        //     );
+        // }
 
-                        if (message.get_status() !== Soup.Status.OK) {
-                            throw new Error(`Request failed with status ${message.get_status()}`);
-                        }
+        _showBridgeUnavailableMessage() {
+            const errorGroup = new Adw.PreferencesGroup({
+                title: _("Connection error"),
+                visible: true,
+            });
 
-                        let data = JSON.parse(text);
+            const label = new Gtk.Label({
+                label: _("No Philips Hue bridge could be found or connected to on your network."),
+                wrap: true,
+                margin_top: 12,
+                margin_bottom: 12,
+            });
 
-                        if (!Array.isArray(data) || data.length === 0 || typeof data[0] !== 'object') {
-                            throw new Error('Expected a non-empty array of JSON objects');
-                        }
-
-                        let hubInfo = data[0];
-
-                        // Update key value in schema
-                        this._settings.set_string(this._settingsKey.HUB_NETWORK_ADDRESS, hubInfo.internalipaddress);
-
-                    } catch (error) {
-                        logError(error, "Failed to fetch bridge info");
-                    }
-                }
-            );
+            errorGroup.add(label);
+            this.add(errorGroup);
         }
 
         _getHueRooms(callback, errorCallback = null) {
-            const Soup = imports.gi.Soup;
-            const GLib = imports.gi.GLib;
+            // const Soup = imports.gi.Soup;
+            // const GLib = imports.gi.GLib;
 
             const session = new Soup.Session();
 
@@ -220,8 +336,8 @@ export var GeneralPage = GObject.registerClass(
         }
 
         _registerWithBridge(successCallback, errorCallback = null) {
-            const Soup = imports.gi.Soup;
-            const GLib = imports.gi.GLib;
+            // const Soup = imports.gi.Soup;
+            // const GLib = imports.gi.GLib;
 
             const session = new Soup.Session();
             const bridgeIPAddr = this._settings.get_string(this._settingsKey.HUB_NETWORK_ADDRESS);
@@ -256,11 +372,8 @@ export var GeneralPage = GObject.registerClass(
                             if (Array.isArray(data) && data[0].success) {
                                 const username = data[0].success.username;
 
-                                log(`Bridge registration succeeded: ${username}`);
-
                                 // Save in schema
                                 this._settings.set_string(this._settingsKey.HUE_USERNAME, username);
-                                log(`Hue username stored: ${username}`);
 
                                 if (successCallback) {
                                     successCallback(username);
@@ -268,21 +381,22 @@ export var GeneralPage = GObject.registerClass(
                                 return GLib.SOURCE_REMOVE; // Stop retrying
                             } else if (data[0]?.error?.type === 101) {
                                 // Link button not pressed yet, keep retrying
-                                log(`Link button not pressed. Attempt ${attemptCount + 1}/${maxAttempts}`);
                             } else if (data[0]?.error) {
                                 const error = new Error(data[0].error.description);
                                 logError(error, 'Bridge registration error');
 
-                                if (errorCallback)
+                                if (errorCallback) {
                                     errorCallback(error);
+                                }
 
                                 return GLib.SOURCE_REMOVE; // Stop on other errors
                             } else {
                                 const error = new Error('Unexpected response from bridge');
                                 logError(error, 'Bridge registration error');
 
-                                if (errorCallback)
+                                if (errorCallback) {
                                     errorCallback(error);
+                                }
 
                                 return GLib.SOURCE_REMOVE;
                             }
@@ -358,8 +472,6 @@ export var GeneralPage = GObject.registerClass(
         }
 
         _onConnectToHub() {
-
-            log("Connect button clicked");
             const hubIPAddr = this._settings.get_string(this._settingsKey.HUB_NETWORK_ADDRESS);
 
             if (hubIPAddr !== '') {
@@ -381,7 +493,7 @@ export var GeneralPage = GObject.registerClass(
 
                                 const successDialog = new Adw.AlertDialog({
                                     heading: "Hub Connection Succeeded",
-                                    body: `Connection succeeded. ${username}`
+                                    body: "Connection succeeded!"
                                 });
 
                                 successDialog.add_response("ok", "Ok");
@@ -400,8 +512,6 @@ export var GeneralPage = GObject.registerClass(
                                 errorDialog.present(this.get_root());
                             }
                         );
-                    } else {
-                        log("Cancelled");
                     }
                 });
 
@@ -413,7 +523,6 @@ export var GeneralPage = GObject.registerClass(
                 });
 
                 dialog.add_response("ok", "Ok");
-
                 dialog.set_response_enabled("Ok", true);
                 dialog.present(this.get_root());
             }
