@@ -1,4 +1,6 @@
 # Hue Lights
+![screenshot](https://github.com/liamreoch/huelights/blob/main/settings.png)
+
 
 ## Gnome shell extension
 Hue Lights allows you to switch rooms on and off with a connected Hue Bridge
@@ -24,31 +26,38 @@ I want it to do one thing well.
 ### Local testing
 If you're planning on making contributions, edits, etc and you need to test it locally:
 
-To enable the plugin for development, move the directory to:
-~/.local/share/gnome-shell/extensions/
+To enable the plugin for development, move the directory to the extensions directory:
+
+`~/.local/share/gnome-shell/extensions/`
 
 As extension requires schema for values, you will need to compile the gschema: 
 
 Move into the extension directory:
-cd huelights@reoch.net
+
+`cd huelights@reoch.net`
 
 Then compile:
-glib-compile-schemas schemas/
+
+`glib-compile-schemas schemas/`
 
 Finally, to enable the extension:
-gnome-extensions enable huelights@reoch.net
+
+`gnome-extensions enable huelights@reoch.net`
 
 ### Translations:
 
 Any assistance you can provide would be greatly appreciated.
 
-// Create directory for new language (this is Spanish)
-mkdir -p locale/es/LC_MESSAGES
+Create directory for new language (this is Spanish)
 
-// Create po file
-msginit --locale=es --input=huelights.pot --output-file=locale/es/LC_MESSAGES/huelights.po
+`mkdir -p locale/es/LC_MESSAGES`
 
-// Using poEdit (or similar), add translations
+Create po file
 
-// Generate binary .mo file
-msgfmt locale/es/LC_MESSAGES/huelights.po -o locale/es/LC_MESSAGES/huelights.mo
+`msginit --locale=es --input=huelights.pot --output-file=locale/es/LC_MESSAGES/huelights.po`
+
+Using poEdit (or similar), add translations
+
+Generate binary .mo file
+
+`msgfmt locale/es/LC_MESSAGES/huelights.po -o locale/es/LC_MESSAGES/huelights.mo`

@@ -30,7 +30,7 @@ msgid "Connect"
 msgstr ""
 
 #: preferences/generalPage.js:161
-msgid "Default room"
+msgid "Default Room"
 msgstr ""
 
 #: preferences/generalPage.js:176
@@ -59,11 +59,11 @@ msgstr ""
 
 #: preferences/resetPage.js:28
 msgid "Delete Hub Connection"
-msgstr ""
+msgstr "Eliminar conexión"
 
 #: extension.js:32
 msgid "No room selected"
-msgstr ""
+msgstr "Habitación no configurada"
 
 #: extension.js:35 extension.js:56
 msgid "Hue Lights"
@@ -71,7 +71,7 @@ msgstr ""
 
 #: extension.js:62
 msgid "Settings"
-msgstr ""
+msgstr "Configuración"
 
 #: extension.js:138
 msgid "Failed to check default light status"
