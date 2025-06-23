@@ -1,16 +1,19 @@
 "use strict";
 
+import Gtk from 'gi://Gtk';
+import Gdk from 'gi://Gdk';
+
 import * as GeneralPrefs from "./preferences/generalPage.js";
 import * as ResetPrefs from "./preferences/resetPage.js";
 import { SettingsKey } from './utils/settingsKeys.js';
 import { ExtensionPreferences } from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
 
-export default class PhilipsHuePrefs extends ExtensionPreferences {
+export default class HueLightsPrefs extends ExtensionPreferences {
   fillPreferencesWindow(window) {
-    // let iconTheme = Gtk.IconTheme.get_for_display(Gdk.Display.get_default());
-    // if (!iconTheme.get_search_path().includes(this.path + '/icons')) {
-    //    iconTheme.add_search_path(this.path + '/icons');
-    // }
+    let iconTheme = Gtk.IconTheme.get_for_display(Gdk.Display.get_default());
+    if (!iconTheme.get_search_path().includes(this.path + '/icons')) {
+       iconTheme.add_search_path(this.path + '/icons');
+    }
 
     const settings = this.getSettings();
     const generalPage = new GeneralPrefs.GeneralPage(settings, SettingsKey);

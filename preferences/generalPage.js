@@ -68,8 +68,6 @@ export var GeneralPage = GObject.registerClass(
                 });
         }
 
-
-
         // _fetchBridgeInfoPromise() {
         //     return new Promise((resolve, reject) => {
         //         this._fetchBridgeInfo((error, data) => {
@@ -102,12 +100,13 @@ export var GeneralPage = GObject.registerClass(
                         let data = JSON.parse(text);
 
                         if (!Array.isArray(data) || data.length === 0 || typeof data[0] !== 'object') {
-                            // No Hue Bridge found on this network
-                            resolve([]); // resolve empty array — no error, just no bridges
+                            // No Hue Bridge found on this network - no error, just no bridges
+                            resolve([]);
                             return;
                         }
 
-                        resolve(data); // resolve the full array of bridges
+                        // resolve the full array of bridges
+                        resolve(data);
 
                     } catch (error) {
                         reject(error);
@@ -225,46 +224,6 @@ export var GeneralPage = GObject.registerClass(
             return (hueNetworkAddress !== '' && hueUsername !== '');
         }
 
-        // _fetchBridgeInfo() {
-        //     const url = "https://discovery.meethue.com/";
-        //
-        //     const session = new Soup.Session();
-        //     const message = Soup.Message.new('GET', url);
-        //
-        //     session.send_and_read_async(
-        //         message,
-        //         // GLib.PRIORITY_DEFAULT,
-        //         0,
-        //         null,
-        //         (source, result) => {
-        //             try {
-        //                 const stream = session.send_and_read_finish(result);
-        //                 const bytes = stream.get_data();
-        //                 const text = new TextDecoder().decode(bytes);
-        //
-        //                 if (message.get_status() !== Soup.Status.OK) {
-        //                     throw new Error(`Request failed with status ${message.get_status()}`);
-        //                 }
-        //
-        //                 let data = JSON.parse(text);
-        //
-        //                 if (!Array.isArray(data) || data.length === 0 || typeof data[0] !== 'object') {
-        //                     // No Hue Bridge found on this network
-        //                     throw new Error('Expected a non-empty array of JSON objects');
-        //                 }
-        //
-        //                 let hubInfo = data[0];
-        //
-        //                 // Update key value in schema
-        //                 this._settings.set_string(this._settingsKey.HUB_NETWORK_ADDRESS, hubInfo.internalipaddress);
-        //
-        //             } catch (error) {
-        //                 logError(error, "Failed to fetch bridge info");
-        //             }
-        //         }
-        //     );
-        // }
-
         _showBridgeUnavailableMessage() {
             const errorGroup = new Adw.PreferencesGroup({
                 title: _("Connection error"),
@@ -283,9 +242,6 @@ export var GeneralPage = GObject.registerClass(
         }
 
         _getHueRooms(callback, errorCallback = null) {
-            // const Soup = imports.gi.Soup;
-            // const GLib = imports.gi.GLib;
-
             const session = new Soup.Session();
 
             const bridgeIP = this._settings.get_string(this._settingsKey.HUB_NETWORK_ADDRESS);
@@ -326,10 +282,10 @@ export var GeneralPage = GObject.registerClass(
                         if (callback)
                             callback(rooms);
 
-                    } catch (e) {
-                        logError(e, 'Failed to fetch Hue rooms');
+                    } catch (error) {
+                        logError(error, 'Failed to fetch Hue rooms');
                         if (errorCallback)
-                            errorCallback(e);
+                            errorCallback(error);
                     }
                 }
             );
@@ -414,10 +370,10 @@ export var GeneralPage = GObject.registerClass(
                                 }
                             }
 
-                        } catch (e) {
-                            logError(e, 'Failed to register with Hue bridge');
+                        } catch (error) {
+                            logError(error, 'Failed to register with Hue bridge');
                             if (errorCallback)
-                                errorCallback(e);
+                                errorCallback(error);
                         }
 
                         return GLib.SOURCE_REMOVE; // Prevent duplicate retry from this call
@@ -464,8 +420,8 @@ export var GeneralPage = GObject.registerClass(
                             log(`Unexpected Hue response: ${text}`);
                         }
 
-                    } catch (e) {
-                        logError(e, `Failed to toggle light for room ${groupId}`);
+                    } catch (error) {
+                        logError(error, `Failed to toggle light for room ${groupId}`);
                     }
                 }
             );
@@ -498,7 +454,6 @@ export var GeneralPage = GObject.registerClass(
 
                                 successDialog.add_response("ok", "Ok");
                                 successDialog.present(this.get_root());
-
                             },
                             error => {
 

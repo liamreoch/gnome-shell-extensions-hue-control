@@ -1,0 +1,78 @@
+# Spanish translations for PACKAGE package.
+# Copyright (C) 2025 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Liam Reoch <liam@gnosis>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-06-23 14:17+1000\n"
+"PO-Revision-Date: 2025-06-23 14:17+1000\n"
+"Last-Translator: Liam Reoch <liam@gnosis>\n"
+"Language-Team: Spanish\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ASCII\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: preferences/generalPage.js:16
+msgid "General"
+msgstr ""
+
+#: preferences/generalPage.js:121 preferences/resetPage.js:21
+msgid "Hub Connection"
+msgstr ""
+
+#: preferences/generalPage.js:127
+msgid "Connect"
+msgstr ""
+
+#: preferences/generalPage.js:161
+msgid "Default room"
+msgstr ""
+
+#: preferences/generalPage.js:176
+msgid "Default Room"
+msgstr ""
+
+#: preferences/generalPage.js:177
+msgid "The room that responds to the menu light toggle"
+msgstr ""
+
+#: preferences/generalPage.js:196
+msgid "Rooms"
+msgstr ""
+
+#: preferences/generalPage.js:229
+msgid "Connection error"
+msgstr ""
+
+#: preferences/generalPage.js:234
+msgid "No Philips Hue bridge could be found or connected to on your network."
+msgstr ""
+
+#: preferences/resetPage.js:13
+msgid "Reset"
+msgstr ""
+
+#: preferences/resetPage.js:28
+msgid "Delete Hub Connection"
+msgstr ""
+
+#: extension.js:32
+msgid "No room selected"
+msgstr ""
+
+#: extension.js:35 extension.js:56
+msgid "Hue Lights"
+msgstr ""
+
+#: extension.js:62
+msgid "Settings"
+msgstr ""
+
+#: extension.js:138
+msgid "Failed to check default light status"
+msgstr ""

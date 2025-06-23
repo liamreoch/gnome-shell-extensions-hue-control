@@ -39,9 +39,14 @@ export function defaultLightIsOn(settings) {
 
 export async function toggleLights(settings) {
     try {
+        const groupId = settings.get_int(settingsKey.DEFAULT_ROOM_ID);
+
+        // No default room, no selection made
+        if (groupId === -1) { return; }
+
         const bridgeIP = settings.get_string(settingsKey.HUB_NETWORK_ADDRESS);
         const username = settings.get_string(settingsKey.HUE_USERNAME);
-        const groupId = settings.get_int(settingsKey.DEFAULT_ROOM_ID);
+
 
         const isCurrentlyOn = await defaultLightIsOn(settings);
         const turnOn = !isCurrentlyOn;

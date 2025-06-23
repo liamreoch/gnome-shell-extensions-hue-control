@@ -1,5 +1,5 @@
 <schemalist>
-    <schema id="org.gnome.shell.extensions.philipshue" path="/org/gnome/shell/extensions/philipshue/">
+    <schema id="org.gnome.shell.extensions.huelights" path="/org/gnome/shell/extensions/huelights/">
         <key name="default-brightness" type="i">
             <default>100</default>
             <summary>Default brightness level</summary>
@@ -29,7 +29,7 @@
             <description>Hue username.</description>
         </key>
         <key name="default-room-id" type="i">
-            <default>0</default>
+            <default>-1</default>
             <summary>Default room ID</summary>
             <description>The room to toggle from the extension menu.</description>
         </key>

@@ -7,32 +7,53 @@ import * as QuickSettings from 'resource:///org/gnome/shell/ui/quickSettings.js'
 import {defaultLightIsOn, toggleLights} from './utils/toggleDefaultRoom.js';
 import {SettingsKey} from './utils/settingsKeys.js';
 
+import Gio from 'gi://Gio';
+import St from 'gi://St';
+
 // Icons
 const ActionsPath = '/icons/hicolor/scalable/actions/';
-const DisabledIcon = 'light-bulb';
+const DisabledIcon = 'lightbulb-off-symbolic';
+const EnabledIcon = 'lightbulb-on-symbolic';
 
-const HueToggle = GObject.registerClass({
+const HueLightsToggle = GObject.registerClass({
     Signals: {
         // No signals yet
     }
-}, class HueToggle extends QuickSettings.QuickMenuToggle {
+}, class HueLightsToggle extends QuickSettings.QuickMenuToggle {
     _init(Me) {
 
         this._settings = Me._settings;
+        this._path = Me.path;
 
         // Get name of current default room
         const defaultRoomName = this._settings.get_string(SettingsKey.DEFAULT_ROOM_NAME);
 
+        // Fallback if the user hasn't set a room yet
+        const subtitle = defaultRoomName !== '' ? defaultRoomName : _('No room selected');
+
         super._init({
             title: _('Hue Lights'),
-            subtitle: _(`${defaultRoomName}`),
-            iconName: 'lightbulb-symbolic',
+            subtitle: _(`${subtitle}`),
             toggleMode: true,
         });
+
+        // Icons
+        this._iconActivated = Gio.ThemedIcon.new(EnabledIcon);
+        this._iconDeactivated = Gio.ThemedIcon.new(DisabledIcon);
+        this._iconTheme = new St.IconTheme();
+        if (!this._iconTheme.has_icon(EnabledIcon)) {
+            this._iconActivated = Gio.icon_new_for_string(`${this._path}${ActionsPath}${EnabledIcon}.svg`);
+        }
+
+        if (!this._iconTheme.has_icon(DisabledIcon)) {
+            this._iconDeactivated = Gio.icon_new_for_string(`${this._path}${ActionsPath}${DisabledIcon}.svg`);
+        }
+        this.updateIcon();
+
+        // this.gicon = this._iconActivated;
         
         // Set up entry
-        // TODO make first null value the image
-        this.menu.setHeader(null, _('Hue Lights'), null);
+        this.menu.setHeader(this._iconActivated, _('Hue Lights'), null);
 
         // Separator
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
@@ -56,31 +77,45 @@ const HueToggle = GObject.registerClass({
         // Default behaviour of the menu item toggle
         this.connect('clicked', () => {
             toggleLights(this._settings);
+            this.updateIcon();
         });
+
+        this.connect('destroy', () => {
+            this._iconActivated = null;
+            this._iconDeactivated = null;
+            this.gicon = null;
+        });
+    }
+
+    updateIcon() {
+        if (this.checked) {
+            this.gicon = this._iconActivated;
+        } else {
+            this.gicon = this._iconDeactivated;
+        }
     }
 });
 
 
-const HueIndicator = GObject.registerClass(
-class HueIndicator extends QuickSettings.SystemIndicator {
+const HueLightsIndicator = GObject.registerClass(
+class HueLightsIndicator extends QuickSettings.SystemIndicator {
     _init(Me) {
         super._init();
-        const toggle = new HueToggle(Me);
+        const toggle = new HueLightsToggle(Me);
         this.quickSettingsItems.push(toggle);
     }
 
     destroy() {
         this._indicator.quickSettingsItems.forEach(item => item.destroy());
-
         this._settings = null;
         super.destroy();
     }
 });
 
-export default class HueExtension extends Extension {
+export default class HueLightsExtension extends Extension {
     enable() {
         this._settings = this.getSettings();
-        this._indicator = new HueIndicator(this);
+        this._indicator = new HueLightsIndicator(this);
         Main.panel.statusArea.quickSettings.addExternalIndicator(this._indicator);
 
         // TODO: limit this to be only if we're in the home network with the bridge
@@ -94,10 +129,13 @@ export default class HueExtension extends Extension {
 
                         this._indicator.quickSettingsItems[0].checked = await defaultLightIsOn(this._settings);
 
+                        // Set the icon to match the state of the light
+                        this._indicator.quickSettingsItems[0].updateIcon();
+
                         // Set subtitle to be the current room
                         this._indicator.quickSettingsItems[0].subtitle = defaultRoomName;
                     } catch (error) {
-                        logError(error, 'Failed to check default light status');
+                        logError(error, _('Failed to check default light status'));
                     }
                 })();
             }
