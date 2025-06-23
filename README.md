@@ -1,5 +1,7 @@
 # Hue Lights
-![screenshot](https://github.com/liamreoch/huelights/blob/main/settings.png)
+![screenshot](https://github.com/liamreoch/huelights/blob/main/screenshots/settings.png)
+
+
 
 
 ## Gnome shell extension
