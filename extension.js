@@ -29,11 +29,11 @@ const HueLightsToggle = GObject.registerClass({
         const defaultRoomName = this._settings.get_string(SettingsKey.DEFAULT_ROOM_NAME);
 
         // Fallback if the user hasn't set a room yet
-        const subtitle = defaultRoomName !== '' ? defaultRoomName : _('No room selected');
+        const subtitle = defaultRoomName === '' ? _('No room selected') :  defaultRoomName;
 
         super._init({
             title: _('Hue Lights'),
-            subtitle: _(`${subtitle}`),
+            subtitle: subtitle,
             toggleMode: true,
         });
 
@@ -132,8 +132,10 @@ export default class HueLightsExtension extends Extension {
                         // Set the icon to match the state of the light
                         this._indicator.quickSettingsItems[0].updateIcon();
 
-                        // Set subtitle to be the current room
-                        this._indicator.quickSettingsItems[0].subtitle = defaultRoomName;
+                        // Set subtitle to be the current room (if one exists)
+                        if (defaultRoomName !== '') {
+                            this._indicator.quickSettingsItems[0].subtitle = defaultRoomName;
+                        }
                     } catch (error) {
                         logError(error, _('Failed to check default light status'));
                     }

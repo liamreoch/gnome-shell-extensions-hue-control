@@ -158,7 +158,7 @@ export var GeneralPage = GObject.registerClass(
 
                     // Default room Group
                     let defaultRoomGroup = new Adw.PreferencesGroup({
-                        title: _("Default room"),
+                        title: _("Default Room"),
                     });
 
                     let roomStore = new Gtk.StringList();
