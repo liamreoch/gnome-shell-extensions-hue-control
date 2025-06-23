@@ -49,8 +49,6 @@ const HueLightsToggle = GObject.registerClass({
             this._iconDeactivated = Gio.icon_new_for_string(`${this._path}${ActionsPath}${DisabledIcon}.svg`);
         }
         this.updateIcon();
-
-        // this.gicon = this._iconActivated;
         
         // Set up entry
         this.menu.setHeader(this._iconActivated, _('Hue Lights'), null);

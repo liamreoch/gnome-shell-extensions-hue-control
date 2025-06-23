@@ -44,12 +44,12 @@ export var ResetPage = GObject.registerClass(
             // this._settings.get_string(this._settingsKey.HUB_NETWORK_ADDRESS);
 
             const dialog = new Adw.AlertDialog({
-                heading: "Delete Hub Connection",
-                body: `Are you sure you want to delete this Hub Connection?`,
+                heading: _('Delete Hub Connection'),
+                body: _('Are you sure you want to delete this Hub Connection?'),
             });
 
-            dialog.add_response("cancel", "Cancel");
-            dialog.add_response("delete", "Delete Hub Connection");
+            dialog.add_response("cancel", _('Cancel'));
+            dialog.add_response("delete", _('Delete Hub Connection'));
             dialog.set_default_response("delete");
             dialog.set_response_enabled("delete", true);
 
@@ -58,7 +58,6 @@ export var ResetPage = GObject.registerClass(
                     // Delete all data related to this connection
                     this._settings.set_string(this._settingsKey.HUB_NETWORK_ADDRESS, '');
                     this._settings.set_int(this._settingsKey.DEFAULT_ROOM_ID, 0);
-                    this._settings.set_string(this._settingsKey.HOME_NETWORK_SSID, '');
                     this._settings.set_string(this._settingsKey.HUE_USERNAME, '');
                     this._settings.set_string(this._settingsKey.DEFAULT_ROOM_NAME, '');
                 }
@@ -66,8 +65,4 @@ export var ResetPage = GObject.registerClass(
 
             dialog.present(this.get_root());
         }
-
-
-
-
     });

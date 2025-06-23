@@ -27,7 +27,7 @@ export var GeneralPage = GObject.registerClass(
                 return this._fetchBridgeInfoPromise()
                     .then(bridges => {
                         if (!bridges || bridges.length === 0) {
-                            return Promise.reject(new Error('No bridges found on the network'));
+                            return Promise.reject(new Error(_('No bridges found on the network')));
                         }
                         return bridges[0].internalipaddress;
                     });
@@ -67,18 +67,6 @@ export var GeneralPage = GObject.registerClass(
                     this._showBridgeUnavailableMessage();
                 });
         }
-
-        // _fetchBridgeInfoPromise() {
-        //     return new Promise((resolve, reject) => {
-        //         this._fetchBridgeInfo((error, data) => {
-        //             if (error) {
-        //                 reject(error);
-        //             } else {
-        //                 resolve(data);
-        //             }
-        //         });
-        //     });
-        // }
 
         _fetchBridgeInfoPromise() {
             const url = "https://discovery.meethue.com/";
@@ -362,8 +350,7 @@ export var GeneralPage = GObject.registerClass(
                             if (attemptCount < maxAttempts) {
                                 GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, retryInterval, tryRegister);
                             } else {
-                                const error = new Error('Bridge registration timed out.');
-                                logError(error, 'Hue bridge registration timeout');
+                                const error = new Error(_('Bridge registration timed out.'));
 
                                 if (errorCallback) {
                                     errorCallback(error);
@@ -376,10 +363,12 @@ export var GeneralPage = GObject.registerClass(
                                 errorCallback(error);
                         }
 
-                        return GLib.SOURCE_REMOVE; // Prevent duplicate retry from this call
+                        // Prevent duplicate retry from this call
+                        return GLib.SOURCE_REMOVE;
                     }
                 );
             };
+
             // Start first attempt
             tryRegister();
         }
@@ -414,9 +403,7 @@ export var GeneralPage = GObject.registerClass(
                         const response = JSON.parse(text);
 
                         // Success response is usually: [{ "success": { "/groups/1/action/on": true }}]
-                        if (Array.isArray(response) && response[0]?.success) {
-                            log(`Successfully turned ${turnOn ? 'on' : 'off'} room ${groupId}`);
-                        } else {
+                        if (!Array.isArray(response) || !response[0]?.success) {
                             log(`Unexpected Hue response: ${text}`);
                         }
 
@@ -432,8 +419,8 @@ export var GeneralPage = GObject.registerClass(
 
             if (hubIPAddr !== '') {
                 const dialog = new Adw.AlertDialog({
-                    heading: "Hub Connection",
-                    body: `Press the button on the Hub (${hubIPAddr})`
+                    heading: _("Hub Connection"),
+                    body: _('Press the link button on top of the Hub')
                 });
 
                 dialog.add_response("cancel", "Cancel");
@@ -448,22 +435,20 @@ export var GeneralPage = GObject.registerClass(
                             username => {
 
                                 const successDialog = new Adw.AlertDialog({
-                                    heading: "Hub Connection Succeeded",
-                                    body: "Connection succeeded!"
+                                    heading: _('Hub Connection Succeeded'),
+                                    body: _('Connection succeeded!')
                                 });
 
                                 successDialog.add_response("ok", "Ok");
                                 successDialog.present(this.get_root());
                             },
                             error => {
-
-                                log(`error ${error}`);
                                 const errorDialog = new Adw.AlertDialog({
-                                    heading: "Hub Connection Failed",
+                                    heading: _('Hub Connection Failed'),
                                     body: `${error}`
                                 });
 
-                                errorDialog.add_response("ok", "Ok");
+                                errorDialog.add_response("ok", _('Ok'));
                                 errorDialog.present(this.get_root());
                             }
                         );
@@ -473,12 +458,12 @@ export var GeneralPage = GObject.registerClass(
                 dialog.present(this.get_root());
             } else {
                 const dialog = new Adw.AlertDialog({
-                    heading: "Hub Connection",
-                    body: "Failed to fetch bridge info"
+                    heading: _('Hub Connection'),
+                    body: _('Failed to fetch bridge info')
                 });
 
-                dialog.add_response("ok", "Ok");
-                dialog.set_response_enabled("Ok", true);
+                dialog.add_response("ok", _('Ok'));
+                dialog.set_response_enabled("ok", true);
                 dialog.present(this.get_root());
             }
         }

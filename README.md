@@ -1,9 +1,6 @@
 # Hue Lights
 ![screenshot](https://github.com/liamreoch/gnome-shell-extensions-hue-lights/blob/main/screenshots/settings.png)
 
-
-
-
 ## Gnome shell extension
 Hue Lights allows you to switch rooms on and off with a connected Hue Bridge
 
@@ -17,10 +14,12 @@ The intention is to keep the interface clear and following Gnome guidelines.
 - Delete bridge connection
 
 ## Future plans
+- Brightness slider
 - Granular light control for each room
 - Colour selection
 
 I may consider adding support for other light systems, though I want to avoid overcrowding this extension.
+
 I want it to do one thing well.
 
 ## Development notes

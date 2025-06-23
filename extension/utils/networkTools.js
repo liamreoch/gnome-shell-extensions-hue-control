@@ -31,8 +31,8 @@ export function isBridgeAvailable(bridgeIP) {
                 const data = JSON.parse(text);
                 const valid = typeof data === 'object' && data.name !== undefined;
                 resolve(valid);
-            } catch (e) {
-                logError(e, 'Failed to reach or parse Hue bridge /config');
+            } catch (error) {
+                logError(error, 'Failed to reach or parse Hue bridge /config');
                 resolve(false);
             }
         });

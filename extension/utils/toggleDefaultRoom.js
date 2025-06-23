@@ -75,8 +75,8 @@ export async function toggleLights(settings) {
                 } else {
                     log(`Unexpected Hue response: ${text}`);
                 }
-            } catch (e) {
-                logError(e, `Failed to toggle light for room ${groupId}`);
+            } catch (error) {
+                logError(error, `Failed to toggle light for room ${groupId}`);
             }
         });
 
