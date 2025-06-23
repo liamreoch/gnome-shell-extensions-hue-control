@@ -26,6 +26,7 @@ export var GeneralPage = GObject.registerClass(
             const discoverBridge = () => {
                 return this._fetchBridgeInfoPromise()
                     .then(bridges => {
+                        // If it's active, it will return an array with an object inside
                         if (!bridges || bridges.length === 0) {
                             return Promise.reject(new Error(_('No bridges found on the network')));
                         }
@@ -167,6 +168,7 @@ export var GeneralPage = GObject.registerClass(
                         selected: selectedDefault,
                     });
 
+                    // Bind to selection of default room
                     defaultRoomRow.connect("notify::selected", () => {
                         const index = defaultRoomRow.selected;
                         const selectedRoomName = rooms[index].name;
@@ -192,6 +194,7 @@ export var GeneralPage = GObject.registerClass(
 
                         row.id = room.id;
 
+                        // Bind to switch on / off
                         row.connect('notify::active', (sw) => {
                             this._toggleRoomLight(row.id, sw.active);
                         });
@@ -204,8 +207,6 @@ export var GeneralPage = GObject.registerClass(
         }
 
         _keyValuesExist() {
-            const defaultRoomId = this._settings.get_int(this._settingsKey.DEFAULT_ROOM_ID);
-            const defaultRoomName = this._settings.get_string(this._settingsKey.DEFAULT_ROOM_NAME);
             const hueNetworkAddress = this._settings.get_string(this._settingsKey.HUB_NETWORK_ADDRESS);
             const hueUsername = this._settings.get_string(this._settingsKey.HUE_USERNAME);
 
@@ -280,13 +281,13 @@ export var GeneralPage = GObject.registerClass(
         }
 
         _registerWithBridge(successCallback, errorCallback = null) {
-            // const Soup = imports.gi.Soup;
-            // const GLib = imports.gi.GLib;
 
             const session = new Soup.Session();
             const bridgeIPAddr = this._settings.get_string(this._settingsKey.HUB_NETWORK_ADDRESS);
             const url = `http://${bridgeIPAddr}/api`;
-            const body = JSON.stringify({devicetype: "gnome_hue_extension#fedora"});
+
+            const hostname = GLib.get_host_name();
+            const body = JSON.stringify({devicetype: `gnome_hue_extension#${hostname}`});
             const bytes = new GLib.Bytes(new TextEncoder().encode(body));
 
             let attemptCount = 0;

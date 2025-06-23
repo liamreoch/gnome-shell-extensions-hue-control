@@ -38,8 +38,7 @@ export default class HueLightsPrefs extends ExtensionPreferences {
         settings.set_int(SettingsKey.DEFAULT_HEIGHT, currentHeight);
       }
 
-      // window.destroy();
-      return false;
+      window.destroy();
     });
   }
 }
