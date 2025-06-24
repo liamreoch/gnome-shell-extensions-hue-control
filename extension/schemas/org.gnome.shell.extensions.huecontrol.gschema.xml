@@ -1,5 +1,5 @@
 <schemalist>
-    <schema id="org.gnome.shell.extensions.huelights" path="/org/gnome/shell/extensions/huelights/">
+    <schema id="org.gnome.shell.extensions.huecontrol" path="/org/gnome/shell/extensions/huecontrol/">
         <key name="default-brightness" type="i">
             <default>100</default>
             <summary>Default brightness level</summary>
