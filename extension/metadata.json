@@ -1,13 +1,13 @@
 {
-  "name": "Hue Lights",
+  "name": "Hue Control",
   "description": "Control Philips Hue rooms on local network",
-  "uuid": "huelights@reoch.net",
+  "uuid": "huecontrol@reoch.net",
   "donations": {
     "paypal": [
       "liamreoch"
     ]
   },
-  "settings-schema": "org.gnome.shell.extensions.huelights",
+  "settings-schema": "org.gnome.shell.extensions.huecontrol",
   "shell-version": ["48"],
-  "url": "https://github.com/liamreoch/gnome-shell-extensions-hue-lights"
+  "url": "https://github.com/liamreoch/gnome-shell-extensions-hue-control"
 }
