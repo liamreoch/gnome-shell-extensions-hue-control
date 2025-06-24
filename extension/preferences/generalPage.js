@@ -8,6 +8,7 @@ import Soup from 'gi://Soup';
 import GLib from 'gi://GLib';
 import {gettext as _} from "resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js";
 import {isBridgeAvailable} from "../utils/networkTools.js";
+import { getSession } from '../utils/session.js';
 
 export var GeneralPage = GObject.registerClass(
     class HueGeneralPage extends Adw.PreferencesPage {
@@ -62,7 +63,7 @@ export var GeneralPage = GObject.registerClass(
                     return this._loadRoomsUI();
                 })
                 .catch((error) => {
-                    logError(error, 'Initialization failed or no bridge found');
+                    console.error(error, 'Initialization failed or no bridge found');
 
                     // Display error UI
                     this._showBridgeUnavailableMessage();
@@ -71,7 +72,7 @@ export var GeneralPage = GObject.registerClass(
 
         _fetchBridgeInfoPromise() {
             const url = "https://discovery.meethue.com/";
-            const session = new Soup.Session();
+            const session = getSession();
             const message = Soup.Message.new('GET', url);
 
             return new Promise((resolve, reject) => {
@@ -231,7 +232,7 @@ export var GeneralPage = GObject.registerClass(
         }
 
         _getHueRooms(callback, errorCallback = null) {
-            const session = new Soup.Session();
+            const session = getSession();
 
             const bridgeIP = this._settings.get_string(this._settingsKey.HUB_NETWORK_ADDRESS);
             const username = this._settings.get_string(this._settingsKey.HUE_USERNAME);
@@ -272,7 +273,7 @@ export var GeneralPage = GObject.registerClass(
                             callback(rooms);
 
                     } catch (error) {
-                        logError(error, 'Failed to fetch Hue rooms');
+                        console.error(error, 'Failed to fetch Hue rooms');
                         if (errorCallback)
                             errorCallback(error);
                     }
@@ -282,7 +283,7 @@ export var GeneralPage = GObject.registerClass(
 
         _registerWithBridge(successCallback, errorCallback = null) {
 
-            const session = new Soup.Session();
+            const session = getSession();
             const bridgeIPAddr = this._settings.get_string(this._settingsKey.HUB_NETWORK_ADDRESS);
             const url = `http://${bridgeIPAddr}/api`;
 
@@ -328,7 +329,7 @@ export var GeneralPage = GObject.registerClass(
                                 // Link button not pressed yet, keep retrying
                             } else if (data[0]?.error) {
                                 const error = new Error(data[0].error.description);
-                                logError(error, 'Bridge registration error');
+                                console.error(error, 'Bridge registration error');
 
                                 if (errorCallback) {
                                     errorCallback(error);
@@ -337,7 +338,7 @@ export var GeneralPage = GObject.registerClass(
                                 return GLib.SOURCE_REMOVE; // Stop on other errors
                             } else {
                                 const error = new Error('Unexpected response from bridge');
-                                logError(error, 'Bridge registration error');
+                                console.error(error, 'Bridge registration error');
 
                                 if (errorCallback) {
                                     errorCallback(error);
@@ -359,7 +360,7 @@ export var GeneralPage = GObject.registerClass(
                             }
 
                         } catch (error) {
-                            logError(error, 'Failed to register with Hue bridge');
+                            console.error(error, 'Failed to register with Hue bridge');
                             if (errorCallback)
                                 errorCallback(error);
                         }
@@ -375,7 +376,7 @@ export var GeneralPage = GObject.registerClass(
         }
 
         _toggleRoomLight(groupId, turnOn) {
-            const session = Soup.Session.new();
+            const session = getSession();
 
             const bridgeIP = this._settings.get_string(this._settingsKey.HUB_NETWORK_ADDRESS);
             const username = this._settings.get_string(this._settingsKey.HUE_USERNAME);
@@ -405,11 +406,11 @@ export var GeneralPage = GObject.registerClass(
 
                         // Success response is usually: [{ "success": { "/groups/1/action/on": true }}]
                         if (!Array.isArray(response) || !response[0]?.success) {
-                            log(`Unexpected Hue response: ${text}`);
+                            console.log(`Unexpected Hue response: ${text}`);
                         }
 
                     } catch (error) {
-                        logError(error, `Failed to toggle light for room ${groupId}`);
+                        console.error(error, `Failed to toggle light for room ${groupId}`);
                     }
                 }
             );

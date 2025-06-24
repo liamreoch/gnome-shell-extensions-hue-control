@@ -32,7 +32,6 @@ export var ResetPage = GObject.registerClass(
             // Bind signal
             deleteButton.connect('clicked', this._onDeleteHubConnection.bind(this));
 
-
             // Add button to hubConnectionGroup
             deleteHubConnectionGroup.add(deleteButton);
 

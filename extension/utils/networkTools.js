@@ -1,5 +1,7 @@
 import Soup from 'gi://Soup';
 import GLib from 'gi://GLib';
+import { getSession } from './session.js';
+
 
 /**
  * Check if the Hue bridge is reachable and responding to /config.
@@ -12,7 +14,7 @@ export function isBridgeAvailable(bridgeIP) {
             return;
         }
 
-        const session = new Soup.Session();
+        const session = getSession();
         const url = `http://${bridgeIP}/api/config`;
         const message = Soup.Message.new('GET', url);
 
@@ -23,7 +25,7 @@ export function isBridgeAvailable(bridgeIP) {
                 const text = new TextDecoder().decode(bytes);
 
                 if (message.get_status() !== Soup.Status.OK) {
-                    log(`Bridge unavailable (status: ${message.get_status()})`);
+                    console.log(`Bridge unavailable (status: ${message.get_status()})`);
                     resolve(false);
                     return;
                 }
@@ -32,7 +34,7 @@ export function isBridgeAvailable(bridgeIP) {
                 const valid = typeof data === 'object' && data.name !== undefined;
                 resolve(valid);
             } catch (error) {
-                logError(error, 'Failed to reach or parse Hue bridge /config');
+                console.log(error, 'Failed to reach or parse Hue bridge /config');
                 resolve(false);
             }
         });

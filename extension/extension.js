@@ -10,6 +10,7 @@ import {isBridgeAvailable} from "./utils/networkTools.js";
 import {SettingsKey} from './utils/settingsKeys.js';
 const QuickSettingsMenu = Main.panel.statusArea.quickSettings;
 import { PopupAnimation } from 'resource:///org/gnome/shell/ui/boxpointer.js';
+import {abortSession} from "./utils/session.js";
 
 
 // Icons
@@ -89,7 +90,7 @@ const HueLightsToggle = GObject.registerClass({
                         toggle.updateIcon();
 
                     } catch (error) {
-                        logError(error, _('Failed to check default light status'));
+                        console.error(error, _('Failed to check default light status'));
                     }
                 })();
 
@@ -177,7 +178,7 @@ export default class HueLightsExtension extends Extension {
                             toggle.subtitle = defaultRoomName;
                         }
                     } catch (error) {
-                        logError(error, _('Failed to check default light status'));
+                        console.error(error, _('Failed to check default light status'));
                     }
                 })();
             }
@@ -187,6 +188,8 @@ export default class HueLightsExtension extends Extension {
     disable() {
         this._settings = null;
         this._indicator.destroy();
+        this._indicator = null;
+        abortSession();
     }
 
      _openPreferences() {

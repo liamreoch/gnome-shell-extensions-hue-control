@@ -1,6 +1,7 @@
 import Soup from 'gi://Soup';
 import GLib from 'gi://GLib';
 import {SettingsKey as settingsKey} from './settingsKeys.js';
+import { getSession } from './session.js';
 
 export function defaultLightIsOn(settings) {
     return new Promise((resolve, reject) => {
@@ -10,7 +11,7 @@ export function defaultLightIsOn(settings) {
 
         const url = `http://${bridgeIP}/api/${username}/groups/${groupId}`;
 
-        const session = new Soup.Session();
+        const session = getSession();
         const message = Soup.Message.new('GET', url);
 
         session.send_and_read_async(message, 0, null, (source, result) => {
@@ -25,10 +26,7 @@ export function defaultLightIsOn(settings) {
 
                 const data = JSON.parse(text);
                 const isOn = data.state?.any_on === true;
-
-                // // Optional: Save to GSettings
-                // settings.set_boolean(settingsKey.DEFAULT_IS_ON, isOn);
-
+                
                 resolve(isOn);
             } catch (e) {
                 reject(e);
@@ -47,7 +45,6 @@ export async function toggleLights(settings) {
         const bridgeIP = settings.get_string(settingsKey.HUB_NETWORK_ADDRESS);
         const username = settings.get_string(settingsKey.HUE_USERNAME);
 
-
         const isCurrentlyOn = await defaultLightIsOn(settings);
         const turnOn = !isCurrentlyOn;
 
@@ -55,7 +52,7 @@ export async function toggleLights(settings) {
         const body = JSON.stringify({ on: turnOn });
         const bytes = new GLib.Bytes(new TextEncoder().encode(body));
 
-        const session = new Soup.Session();
+        const session = getSession();
         const message = Soup.Message.new("PUT", url);
         message.set_request_body_from_bytes('application/json', bytes);
 
@@ -70,18 +67,16 @@ export async function toggleLights(settings) {
                 }
 
                 const response = JSON.parse(text);
-                if (Array.isArray(response) && response[0]?.success) {
-                    log(`Successfully toggled lights ${turnOn ? 'ON' : 'OFF'} in room ${groupId}`);
-                } else {
-                    log(`Unexpected Hue response: ${text}`);
+                if (!Array.isArray(response) || !response[0]?.success) {
+                    console.log(`Unexpected Hue response: ${text}`);
                 }
             } catch (error) {
-                logError(error, `Failed to toggle light for room ${groupId}`);
+                console.error(error, `Failed to toggle light for room ${groupId}`);
             }
         });
 
     } catch (error) {
-        logError(error, "toggleLights failed while checking room status");
+        console.error(error, "Light toggle failed while checking room status");
     }
 }
 
