@@ -8,6 +8,9 @@ import * as QuickSettings from 'resource:///org/gnome/shell/ui/quickSettings.js'
 import {defaultLightIsOn, toggleLights} from './utils/toggleDefaultRoom.js';
 import {isBridgeAvailable} from "./utils/networkTools.js";
 import {SettingsKey} from './utils/settingsKeys.js';
+const QuickSettingsMenu = Main.panel.statusArea.quickSettings;
+import { PopupAnimation } from 'resource:///org/gnome/shell/ui/boxpointer.js';
+
 
 // Icons
 const ActionsPath = '/icons/hicolor/scalable/actions/';
@@ -188,5 +191,6 @@ export default class HueLightsExtension extends Extension {
 
      _openPreferences() {
         this.openPreferences();
+        QuickSettingsMenu.menu.close(PopupAnimation.FADE);
     }
 }
