@@ -1,8 +1,8 @@
-# Hue Lights
+# Hue Control
 ![screenshot](https://github.com/liamreoch/gnome-shell-extensions-hue-lights/blob/main/screenshots/settings.png)
 
 ## Gnome shell extension
-Hue Lights allows you to switch rooms on and off with a connected Hue Bridge
+Hue Control allows you to switch rooms on and off with a connected Hue Bridge
 
 This was built to provide a very simple toggle to allow you to switch lights on.
 The intention is to keep the interface clear and following Gnome guidelines.
@@ -35,7 +35,7 @@ As extension requires schema for values, you will need to compile the gschema:
 
 Move into the extension directory:
 
-`cd huelights@reoch.net`
+`cd huecontrol@reoch.net`
 
 Then compile:
 
@@ -43,7 +43,7 @@ Then compile:
 
 Finally, to enable the extension:
 
-`gnome-extensions enable huelights@reoch.net`
+`gnome-extensions enable huecontrol@reoch.net`
 
 ### Translations:
 
@@ -55,10 +55,10 @@ Create directory for new language (this is Spanish)
 
 Create po file
 
-`msginit --locale=es --input=huelights.pot --output-file=locale/es/LC_MESSAGES/huelights.po`
+`msginit --locale=es --input=huecontrol.pot --output-file=locale/es/LC_MESSAGES/huecontrol.po`
 
 Using poEdit (or similar), add translations
 
 Generate binary .mo file
 
-`msgfmt locale/es/LC_MESSAGES/huelights.po -o locale/es/LC_MESSAGES/huelights.mo`
+`msgfmt locale/es/LC_MESSAGES/huecontrol.po -o locale/es/LC_MESSAGES/huecontrol.mo`
