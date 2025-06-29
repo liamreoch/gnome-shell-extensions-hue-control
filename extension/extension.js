@@ -133,7 +133,9 @@ class HueLightsIndicator extends QuickSettings.SystemIndicator {
     }
 
     destroy() {
-        this._indicator.quickSettingsItems.forEach(item => item.destroy());
+        if (this._indicator) {
+            this._indicator.quickSettingsItems.forEach(item => item.destroy());
+        }
         this._settings = null;
         super.destroy();
     }
@@ -187,8 +189,12 @@ export default class HueLightsExtension extends Extension {
 
     disable() {
         this._settings = null;
-        this._indicator.destroy();
-        this._indicator = null;
+
+        if (this._indicator) {
+            this._indicator.destroy();
+            this._indicator = null;
+        }
+
         abortSession();
     }
 
