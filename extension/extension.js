@@ -64,39 +64,6 @@ const HueLightsToggle = GObject.registerClass({
             Me._openPreferences()
         });
 
-        // Update name just in time
-        this.menu.connect('open-state-changed', (menu, isOpen) => {
-            if (isOpen) {
-                currentRoom.label.text = this._settings.get_string(SettingsKey.DEFAULT_ROOM_NAME);
-
-                // Check if the bridge is available and halt if not
-                (async () => {
-                    try {
-
-                        const bridgeIP = this._settings.get_string(SettingsKey.HUB_NETWORK_ADDRESS);
-                        const toggle = this._indicator.quickSettingsItems[0];
-
-                        const bridgeAvailable = await isBridgeAvailable(bridgeIP);
-
-                        // Early return if the bridge isn't accessible
-                        if (!bridgeAvailable) {
-                            return;
-                        }
-
-                        // Toggle the button if the light is on
-                        toggle.checked = await defaultLightIsOn(this._settings);
-
-                        // Set the icon to match the state of the light
-                        toggle.updateIcon();
-
-                    } catch (error) {
-                        console.error(error, _('Failed to check default light status'));
-                    }
-                })();
-
-            }
-        });
-
         // Ensure the settings are unavailable when the screen is locked
         settingsItem.visible = Main.sessionMode.allowSettings;
         this.menu._settingsActions[Me.uuid] = settingsItem;
