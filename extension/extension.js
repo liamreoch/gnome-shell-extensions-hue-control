@@ -128,8 +128,8 @@ const HueLightsIndicator = GObject.registerClass(
 class HueLightsIndicator extends QuickSettings.SystemIndicator {
     _init(Me) {
         super._init();
-        const toggle = new HueLightsToggle(Me);
-        this.quickSettingsItems.push(toggle);
+        this._toggle = new HueLightsToggle(Me);
+        this.quickSettingsItems.push(this._toggle);
     }
 
     destroy() {
@@ -137,6 +137,7 @@ class HueLightsIndicator extends QuickSettings.SystemIndicator {
             this._indicator.quickSettingsItems.forEach(item => item.destroy());
         }
         this._settings = null;
+        this._toggle.destroy();
         super.destroy();
     }
 });
